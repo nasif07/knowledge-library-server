@@ -48,6 +48,39 @@ async function run() {
             console.log(result);
         })
 
+        app.get("/allbooks/:id", async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = {
+                _id: new ObjectId(id)
+            }
+            const result = await bookCollection.findOne(query);
+            res.send(result);
+            console.log(result);
+        });
+
+        app.put("/allbooks/:id", async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const filter = {
+                _id: new ObjectId(id)
+            };
+            const options = { upsert: true };
+            const updatedData = {
+                $set: {
+                    image: data.image,
+                    name: data.name,
+                    authorName: data.authorName,
+                    category: data.category,
+                    description: data.description,
+                    quantity: data.quantity,
+                    rating: data.rating
+                }
+            };
+            const result = await bookCollection.updateOne(filter, updatedData, options);
+            res.send(result);
+        })
+
 
         
 
