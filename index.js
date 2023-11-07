@@ -31,7 +31,22 @@ async function run() {
     try {
 
         const bookCollection = client.db("bookCollectionDB").collection("allBooks");
+        const categoryCollection = client.db('bookCategoryDB').collection("allCategories");
         // const cartCollection = client.db("cartCollectionDB").collection("allCart");
+
+        // category
+        app.get("/allcategory", async (req, res) => {
+            const result = await categoryCollection.find().toArray();
+            res.send(result)
+            console.log(result);
+        });
+
+        // show category  wise collor
+        app.get("/allbooks", async (req, res) => {
+            const result = await bookCollection.find().toArray();
+            res.send(result);
+            console.log(result);
+        })
 
 
         
