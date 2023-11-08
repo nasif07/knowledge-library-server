@@ -38,22 +38,22 @@ const client = new MongoClient(uri, {
     }
 });
 
-const verifyToken = async(req, res, next) => {
+const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token;
     console.log('value in the moddleware', req.cookies.token);
-    if(!token){
-        return res.status(401).send({message: 'not authorized'})
+    if (!token) {
+        return res.status(401).send({ message: 'not authorized' })
     }
     jwt.verify(token, process.env.ACCESS_token_SECRET, (err, decoded) => {
-        if(err){
+        if (err) {
             console.log(err);
-            return res.status(401).send({message: 'unauthorized'})
+            return res.status(401).send({ message: 'unauthorized' })
         }
         console.log('value in the token', decoded);
         req.user = decoded;
         next()
     })
-} 
+}
 
 async function run() {
     try {
@@ -61,21 +61,21 @@ async function run() {
         const bookCollection = client.db("bookCollectionDB").collection("allBooks");
         const categoryCollection = client.db('bookCategoryDB').collection("allCategories");
         const borrowedCollection = client.db('borrowedCollectionDB').collection("BorrowedItem");
-        
+
 
         // auth related api
-        app.post('/jwt', async(req, res) => {
+        app.post('/jwt', async (req, res) => {
             const user = req.body;
             console.log(user);
-            const token = jwt.sign(user, process.env.ACCESS_token_SECRET, {expiresIn: '10h'})
+            const token = jwt.sign(user, process.env.ACCESS_token_SECRET, { expiresIn: '10h' })
 
             res
-            .cookie('token', token, {
-                httpOnly: true,
-                secure: false,
-                // sameSite: 'none'
-            })
-            .send({success: true});
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: false,
+                    // sameSite: 'none'
+                })
+                .send({ success: true });
         })
 
 
@@ -93,8 +93,8 @@ async function run() {
             const email = req.query.email;
             const tokenEmail = req.user.email;
 
-            if(email !== tokenEmail){
-                return res.status(403).send({message: 'forbidden access'})
+            if (email !== tokenEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
             const result = await bookCollection.insertOne(book);
             // console.log(result);
@@ -103,7 +103,15 @@ async function run() {
 
 
         app.get("/allbooks", async (req, res) => {
-            const result = await bookCollection.find().toArray();
+
+            let sortObj = {}
+            const sortField = req.query.sortField;
+            const sortOrder = req.query.sortOrder;
+
+            if(sortField && sortOrder){
+                sortObj[sortField] = sortOrder;
+            }
+            const result = await bookCollection.find().sort(sortObj).toArray();
             res.send(result);
             // console.log(result);
         })
@@ -123,8 +131,8 @@ async function run() {
             const id = req.params.id;
             const email = req.query.email;
             const tokenEmail = req.user.email;
-            if(email !== tokenEmail){
-                return res.status(403).send({message: 'forbidden access'})
+            if (email !== tokenEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
             }
             // console.log('fai gei', email);
             const data = req.body;
@@ -151,28 +159,35 @@ async function run() {
 
 
 
-        app.get('/borrowed', async(req, res) => {
+        app.get('/borrowed', async (req, res) => {
             console.log(req.query);
             let query = {}
-            if(req.query?.email){
-                query = {email: req.query.email}
+            if (req.query?.email) {
+                query = { email: req.query.email }
             }
             console.log(query);
             const result = await borrowedCollection.find(query).toArray();
             res.send(result)
         })
 
-        app.post('/borrowed', async(req, res) => {
+        app.post('/borrowed', async (req, res) => {
             const borrowed = req.body;
             console.log(borrowed);
             const result = await borrowedCollection.insertOne(borrowed);
             res.send(result)
         });
 
+        app.delete('/borrowed/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await borrowedCollection.deleteOne(query)
+            res.send(result);
+        })
 
 
 
-        
+
+
 
 
 
