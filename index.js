@@ -10,7 +10,11 @@ const port = process.env.PORT || 5000;
 
 
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: [
+        'http://localhost:5173',
+        'https://knowledge-library-c3978.web.app',
+        'https://knowledge-library-c3978.firebaseapp.com'
+    ],
     credentials: true,
 }));
 app.use(express.json());
@@ -56,6 +60,7 @@ async function run() {
 
         const bookCollection = client.db("bookCollectionDB").collection("allBooks");
         const categoryCollection = client.db('bookCategoryDB').collection("allCategories");
+        const borrowedCollection = client.db('borrowedCollectionDB').collection("BorrowedItem");
         
 
         // auth related api
@@ -141,6 +146,30 @@ async function run() {
             const result = await bookCollection.updateOne(filter, updatedData, options);
             res.send(result);
         })
+
+        // borrowed route
+
+
+
+        app.get('/borrowed', async(req, res) => {
+            console.log(req.query);
+            let query = {}
+            if(req.query?.email){
+                query = {email: req.query.email}
+            }
+            console.log(query);
+            const result = await borrowedCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        app.post('/borrowed', async(req, res) => {
+            const borrowed = req.body;
+            console.log(borrowed);
+            const result = await borrowedCollection.insertOne(borrowed);
+            res.send(result)
+        });
+
+
 
 
         
