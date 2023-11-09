@@ -72,8 +72,8 @@ async function run() {
             res
                 .cookie('token', token, {
                     httpOnly: true,
-                    secure: false,
-                    // sameSite: 'none'
+                    secure: true,
+                    sameSite: 'none'
                 })
                 .send({ success: true });
         })
@@ -107,11 +107,21 @@ async function run() {
             let sortObj = {}
             const sortField = req.query.sortField;
             const sortOrder = req.query.sortOrder;
+            let sortByPositive = {}
 
             if(sortField && sortOrder){
                 sortObj[sortField] = sortOrder;
+                console.log(sortField, sortOrder)
+                // const quantity1 = { $gt: 0 }
+                // sortByPositive['quantity'] = { $ne: 0 };
+                // sortByPositive = { quantity: { $gt: 0 } }
+                
             }
-            const result = await bookCollection.find().sort(sortObj).toArray();
+            console.log(sortByPositive)
+
+
+            const curson = bookCollection.find(sortByPositive).sort(sortObj);
+            const result = await curson.toArray()
             res.send(result);
             // console.log(result);
         })
@@ -171,10 +181,35 @@ async function run() {
         })
 
         app.post('/borrowed', async (req, res) => {
+
             const borrowed = req.body;
-            console.log(borrowed);
-            const result = await borrowedCollection.insertOne(borrowed);
-            res.send(result)
+            const postName = req.body.name;
+            const postEmail = req.body.email
+            console.log('in the input',postName, postEmail);
+
+            const id = req.params.id;
+            console.log('boorwed item', borrowed);
+            // console.log(id);
+            const query = {
+                name: postName,
+                email: postEmail
+            }
+
+            const existingDocument = await borrowedCollection.findOne(query);
+            console.log(existingDocument);
+
+
+            // const existingDocument = await collection.findOne(dataToInsert);
+            // console.log(borrowed);
+            
+            // res.send(result)
+
+            if (existingDocument) {
+                res.status(409).json({ message: 'Data already exists' });
+              } else {
+                const result = await borrowedCollection.insertOne(borrowed);
+                res.send(result)
+              }
         });
 
         app.delete('/borrowed/:id', async (req, res) => {
