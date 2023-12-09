@@ -115,7 +115,7 @@ async function run() {
                 // const quantity1 = { $gt: 0 }
                 // sortByPositive['quantity'] = { $ne: 0 };
                 sortByPositive = { quantity: { $gt: 0 } }
-                
+
             }
             console.log(sortByPositive)
 
